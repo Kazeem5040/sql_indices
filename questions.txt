@@ -1,0 +1,40 @@
+Pseudo-code for the fast query with covering indexes:
+
+Let’s assume we have tables A, B, C and a query joining them on some columns.
+
+# Pseudo-code for fast query with covering indexes
+for row_a in IndexA:             # Scan IndexA (already sorted for join/search)
+    matching_rows_b = IndexB.lookup(row_a.key)   # Binary search in IndexB using index
+    for row_b in matching_rows_b:
+        matching_rows_c = IndexC.lookup(row_b.key)   # Binary search in IndexC using index
+        for row_c in matching_rows_c:
+            output(row_a.col1, row_b.col2, row_c.col3)  # Retrieve only needed columns from covering index
+
+Notice: No full table scans. Each lookup is fast because the indexes are sorted (binary search).
+
+Covering index allows output() to directly get the columns it needs without touching the main table.
+
+2..
+Big-O Estimate for the fast query:
+
+Without covering index: Each join uses an index → O(N log N) per table lookup. If there are 3 tables, roughly O(N log N) per join step (much better than O(N³)), though actual behavior depends on selectivity.
+
+With covering index: We don’t even read the main table. The whole query is roughly linear in the number of matching rows:
+
+O(number of output rows) ≈ O(K)
+
+
+Much faster than the naive O(N³).
+
+3. Big-O Estimate for creating an index:
+
+Creating an index on N rows:
+
+Typically uses a sort + build step → O(N log N)
+
+Creating a covering index is slightly more work than a normal index (because it includes more columns), but still roughly:
+
+O(N log N)
+
+
+This is a one-time cost, after which queries are much faster.
